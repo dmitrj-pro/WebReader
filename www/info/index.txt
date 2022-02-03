@@ -1,0 +1,53 @@
+						<script>
+							function download(id) {
+								location.href = "../../download/" + id;
+							}
+							function read(id) {
+								location.href = "../../book/" + id + "/";
+							}
+						</script>
+						<div class="card">
+							<div class="card-body">
+								<table class="table mt-3">
+									<tbody>
+										<tr>
+											<td><img src="../../{}" style="max-height:23em" /></td>
+											<td>
+												<table class="table mt-3">
+													<tbody>
+														<tr>
+															<td>Author:</td>
+															<td>{}</td>
+														</tr>
+														<tr>
+															<td>Name:</td>
+															<td>{}</td>
+														</tr>
+														<tr>
+															<td>Publish date:</td>
+															<td>{}</td>
+														</tr>
+														<tr>
+															<td colspan="2">
+																<div class="card-action" >
+																	<button class="btn btn-success" onclick="download('{}')">Download</button>
+																	<button class="btn btn-success" onclick="read('{}')">Read</button>
+																</div>
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</td>
+										</tr>
+										<tr>
+											<td colspan="2">{}</td>
+										</tr>
+										<tr>
+											<td colspan="2">
+												<iframe src="../../book/{}/" title="Read book" style="height:50em" width="100%">
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>

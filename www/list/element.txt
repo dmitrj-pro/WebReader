@@ -1,0 +1,10 @@
+								<div class="card" style="overflow:hidden; flex: 0 0 150px; padding-left: 15px; padding-right: 15px; flex: 0 0 16.666667%; max-width:260px;min-width:10%; display:inline-block">
+									<div class="card-header">
+										<div class="card-category" style="white-space:nowrap;">{}</div>
+										<div class="card-title" style="height: 40px" onclick="openInfo('{}')">{}</div>
+									</div>
+									<img src="{}" onclick="openInfo('{}')" style="max-height:23em" />
+									<div class="card-action" >
+										<button class="btn btn-success" onclick="openClick('{}')">Open</button>
+									</div>
+								</div>

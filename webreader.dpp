@@ -1,0 +1,72 @@
+TYPE = console
+OUT = webreader
+
+SOURCE = ./main.cpp
+	HEADER = ./Finder.h
+		SOURCE = ./Finder.cpp
+	HEADER = ./WebReader.h
+		SOURCE = ./WebReader.cpp
+			HEADER = ./UniCode.h
+				SOURCE = ./UniCode.cpp
+				HEADER = ./Base64.h
+					SOURCE = ./Base64.cpp
+		HEADER = ./PositionSaver.h
+			SOURCE = ./PositionSaver.cpp
+	HEADER = ./Books/Book.h
+		SOURCE = ./Books/Book.cpp
+	HEADER = ./Books/PDF.h
+		SOURCE = ./Books/PDF.cpp
+			HEADER = ./Books/sha1.hpp
+				SOURCE = ./Books/sha1.cpp
+	HEADER = ./Books/Galery.h
+		SOURCE = ./Books/Galery.cpp
+	HEADER = ./Books/EPub.h
+		SOURCE = ./Books/EPub.cpp
+		HEADER = ./EventLooper.h
+			SOURCE = ./EventLooper.cpp
+		HEADER = ./Books/XMLParser.h
+			SOURCE = ./Books/XMLParser.cpp
+	HEADER = ./Zip/Zip.h
+		SOURCE = ./Zip/Zip.cpp
+			HEADER = ./Zip/zip_file.hpp
+
+HEADER = ${DP_LIB}/Addon/httpsrv/HttpHostRouter.h
+SOURCE = ${DP_LIB}/Addon/httpsrv/HttpHostRouter.cpp
+HEADER = ${DP_LIB}/Addon/httpsrv/HttpPathRouter.h
+SOURCE = ${DP_LIB}/Addon/httpsrv/HttpPathRouter.cpp
+HEADER = ${DP_LIB}/Addon/httpsrv/HttpRequest.h
+SOURCE = ${DP_LIB}/Addon/httpsrv/HttpRequest.cpp
+HEADER = ${DP_LIB}/Addon/httpsrv/HttpServer.h
+SOURCE = ${DP_LIB}/Addon/httpsrv/HttpServer.cpp
+HEADER = ./www/textfill.h
+SOURCE = ./www/textfill.cpp
+{Generate www}
+	RES=bash -c "../../generate-html zip -b .png,.jpg,.ico,.eot,.svg,.ttf,.woff,.woff2,.gif,.cur,.bcmap -t .html,.css,.js,.txt,.map,.scss,.properties"
+{}
+HEADER = ./www/www.h
+
+
+CXXFLAGS=-std=c++11
+
+[!DP_LIB]
+THROW=Dmitrj PRO Lib is not set. Install this lib and set in PMake.
+[]
+[!DP_LIB_LIB]
+THROW=Dmitrj PRO Lib is not set. Install this lib and set in PMake.
+[]
+
+LIBS = DP_LIB_LIB, -static-libstdc++, -static-libgcc, -pthread
+INCLUDE = DP_LIB, -static-libstdc++, -static-libgcc
+
+[WINDOWS]
+CXXFLAGS=-DDP_WIN
+CXXFLAGS=-DDP_WINDOWS
+LIBS=-lws2_32 -lwininet -lrasapi32
+[]
+[LINUX]
+CXXFLAGS=-DDP_LIN
+[]
+
+CXXFLAGS=-fopenmp
+CXXFLAGS=-std=c++11 -DNOSSL -DDP_DEBUG
+

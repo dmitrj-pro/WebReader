@@ -1,0 +1,5 @@
+<li class="nav-item">
+	<a href="/index.html?filter={}">
+		<p>{}</p>
+	</a>
+</li>

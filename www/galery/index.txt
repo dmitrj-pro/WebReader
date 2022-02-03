@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Script Tutorials" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Galery Viewer</title>
+	
+	<style>
+		body {
+			background-color: #aaa;
+		}
+	</style>
+    <!-- add styles and scripts -->
+	
+	<!-- galery -->
+	<link href="galery.css" rel="stylesheet" type="text/css" />
+	<script type="text/javascript" src="galery.js"></script>
+</head>
+<body>
+	<!-- galery -->
+	<a href="/">Books</a>
+	<div class="container">
+		<script>
+			var slideIndex = {};
+
+			function showSlides(n) {
+				const images = [
+					{}
+				];
+				if (n < 0)
+					slideIndex =  images.length - 1;
+				if (n >= images.length)
+					slideIndex = 0;
+					
+				let sendUrl = "POSITION/" + "?pos=" + slideIndex.toString();
+				let request = new Request(sendUrl);
+				fetch(request);
+					
+				var container = document.getElementsByClassName("container");
+				if (container.length > 0)
+					container[0].style.backgroundImage = "url('" + images[slideIndex] + "')";
+			}
+			showSlides(slideIndex);
+		</script>
+	  <a class="prev" onclick="plusSlides(-1)">(</a>
+	  <a class="next" onclick="plusSlides(1)">)</a>
+	</div>
+</body>
+</html>
