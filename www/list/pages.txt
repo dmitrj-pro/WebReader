@@ -1,0 +1,35 @@
+<script>
+	function GET(key) {
+		var p = window.location.search;
+		p = p.match(new RegExp(key + '=([^&=]+)'));
+		return p ? p[1] : false;
+	}
+	function changeFunc() {
+		var selectBox = document.getElementById("solidSelect");
+		var selectedValue = selectBox.options[selectBox.selectedIndex].value;
+		var page = GET("page");
+		var limit = GET("limit");
+		var page_num = "0";
+		if (page != false && limit != false) {
+			page = parseInt(page);
+			limit = parseInt(limit);
+			page = page * limit;
+			page = page / parseInt(selectedValue);
+			page_num = page.toString();
+		}
+		var link = "index.html?limit=" + selectedValue.toString() + "&page=" + page_num;
+		var filter = GET("filter");
+		if (filter != false)
+			link = link + "&filter=" + filter;
+		location.href = link;
+	}
+</script>
+
+<nav aria-label="Page navigation example">
+  <ul class="pagination">
+    {}
+  </ul>
+  <select class="form-control input-solid" id="solidSelect" style="max-width: 10vw" onchange="changeFunc();">
+		{}
+	</select>
+</nav>

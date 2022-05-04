@@ -43,7 +43,8 @@ class _EventLooper{
 			e.second = func;
 			if (exists(oneLoop2, name))
 				remove_event(oneLoop2, name);
-			push_event(oneLoop, e);
+			if (!exists(oneLoop, name))
+				push_event(oneLoop, e);
 		}
 		inline bool exists_shot(const String & name) {
 			return exists(oneLoop, name) && exists(oneLoop2, name);

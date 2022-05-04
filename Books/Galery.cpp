@@ -140,7 +140,7 @@ Request Galery::draw(Request req, const String & _path, MakeRequest make) {
 			pos ++;
 		}
 		Position position = PositionSaver::Get().getPosition(this->id);
-		String html = findFillText("galery/index.txt", List<String> { position.position.size() == 0 ? "0" : position.position, out.str() } );
+		String html = findFillText("galery/index.txt", List<String> { position.position.size() == 0 ? "1" : position.position, out.str() } );
 		Request resp = make();
 		resp->headers["Content-Type"] = getMimeType("index.html");
 		resp->body = new char[html.size() + 1];

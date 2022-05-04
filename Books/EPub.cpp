@@ -217,16 +217,17 @@ Request EPub::draw(Request req, const String & _path, MakeRequest make) {
 	#endif
 	DP_LOG_DEBUG << "Request get " << path;
 	zip.reopen();
-	if (!EventLooper::Get().exists_shot(zip.Filename())) {
-		EventLooper::Get().add_to_one_shot(zip.Filename(), [this]() {
-			this->zip.close();
-		});
-	}
+
+	EventLooper::Get().add_to_one_shot(zip.Filename(), [this]() {
+		this->zip.close();
+	});
+
 	if (zip.hasFile(path)) {
 		Request req = make();
 		unsigned long long size = 0;
 		req->body= zip.getAsBin(path, size);
 		req->body_length = size;
+		req->headers["Content-Type"] = getMimeType(path);
 		return req;
 	} else {
 		DP_LOG_TRACE << "File not found in book. It is reader file?";

@@ -4,6 +4,8 @@
 #include <_Driver/Path.h>
 #include "Finder.h"
 #include <_Driver/Files.h>
+#include "EventLooper.h"
+#include <_Driver/ServiceMain.h>
 
 using __DP_LIB_NAMESPACE__::String;
 using __DP_LIB_NAMESPACE__::List;
@@ -12,8 +14,21 @@ using __DP_LIB_NAMESPACE__::Path;
 using __DP_LIB_NAMESPACE__::AllRead;
 
 _PositionSaver::_PositionSaver(const String & config) {
+	Path p {__DP_LIB_NAMESPACE__::ServiceSinglton::Get().getExecuteFolder()};
+	p.Append(chacheDir);
+	chacheDir = p.Get();
+	p = Path{__DP_LIB_NAMESPACE__::ServiceSinglton::Get().getExecuteFolder()};
+	p.Append(pdftopng);
+	pdftopng = p.Get();
+
 	this->filename = config;
 	load();
+	EventLooper::Get().add_to_loop("PositionSaver", [this]() {
+		if (this->changed) {
+			this->save();
+		}
+	});
+	Files::MkDir(this->chacheDir);
 }
 
 void _PositionSaver::tryImportForFile(const String & id, const String & filename) {
@@ -25,9 +40,31 @@ void _PositionSaver::tryImportForFile(const String & id, const String & filename
 	if (pos.last_time >= last_read)
 		return;
 	pos.position = trim(AllRead(p.Get()));
+
+	if (pos.position.find("epub") != pos.position.npos && pos.position.find("[") != pos.position.npos) {
+		__DP_LIB_NAMESPACE__::SmartParser par {"${before}[${inner}]${after}"};
+		if (par.Check(pos.position))
+			pos.position = par.Get("before") + par.Get("after");
+	}
+
 	pos.last_time = last_read;
 	positions[id] = pos;
 	save();
+}
+
+String _PositionSaver::getPDFtoPNGPath() {
+	Path p { this->pdftopng};
+	if (p.IsFile())
+		return p.Get();
+	else {
+		#ifdef DP_WIN
+			p = Path{this->pdftopng + ".exe"};
+			if (p.IsFile())
+				return p.Get();
+			else
+		#endif
+				throw EXCEPTION("PDFtoPNG not found");
+	}
 }
 
 #define Read(X, Var) \
@@ -73,18 +110,33 @@ void _PositionSaver::load() {
 	in * setting;
 	in.close();
 
+	ReadN("System.CacheDir", this->chacheDir);
+	ReadNType("System.EnablePDFtoPNG", this->pdftopng_enable, bool);
+	ReadN("System.PDFtoPNG", this->pdftopng);
+
 	auto books = setting.getFolders<List<String>>("Books");
 	for (String id : books) {
 		String key = "Books." + id  + ".";
 		Position pos;
 		ReadN(key + "Position", pos.position);
 		ReadNType(key + "LastRead", pos.last_time, unsigned int);
+		if (pos.position.find("epub") != pos.position.npos && pos.position.find("[") != pos.position.npos) {
+			__DP_LIB_NAMESPACE__::SmartParser par {"${before}[${inner}]${after}"};
+			if (par.Check(pos.position))
+				pos.position = par.Get("before") + par.Get("after");
+		}
 		this->positions[id] = pos;
 	}
+	changed = false;
 }
 
 void _PositionSaver::save() {
 	__DP_LIB_NAMESPACE__::Setting setting;
+
+	Set("System.CacheDir", this->chacheDir);
+	SetType("System.EnablePDFtoPNG", this->pdftopng_enable);
+	Set("System.PDFtoPNG", this->pdftopng);
+
 	for (const auto & item : this->positions) {
 		String key = "Books." + item.first  + ".";
 		Set(key + "Position", item.second.position);
@@ -94,6 +146,7 @@ void _PositionSaver::save() {
 	out.open(this->filename);
 	out << setting;
 	out.close();
+	changed = false;
 }
 
 DP_SINGLTONE_CLASS_CPP(_PositionSaver, PositionSaver);

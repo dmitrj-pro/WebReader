@@ -19,9 +19,10 @@ using __DP_LIB_NAMESPACE__::Ifstream;
 
 PDF::PDF(const String & filename):Book(filename) {
 	this->id = SHA1::from_file(filename);
-	Path p2 { filename};
-	this->name = p2.GetFile();
-	Path p {filename + ".jpg"};
+	this->name = Path(filename).GetFile();
+
+	Path p {PositionSaver::Get().getCacheDir()};
+	p.Append(this->name + ".jpg");
 	if (p.IsFile()) {
 		this->cover_size = Files::fileSize(p.Get());
 		this->cover = new char[this->cover_size+1];
@@ -29,6 +30,17 @@ PDF::PDF(const String & filename):Book(filename) {
 		in.open(p.Get(), std::ios::binary);
 		in.read(this->cover, this->cover_size);
 		in.close();
+	} else {
+		Path fileCover = Path{PositionSaver::Get().getCacheDir()};
+		fileCover.Append(this->id + "-000001.png");
+		if (fileCover.IsFile()) {
+			this->cover_size = Files::fileSize(fileCover.Get());
+			this->cover = new char[this->cover_size+1];
+			Ifstream in;
+			in.open(fileCover.Get(), std::ios::binary);
+			in.read(this->cover, this->cover_size);
+			in.close();
+		}
 	}
 	this->AfterLoadBook();
 }
@@ -70,9 +82,12 @@ Request PDF::draw(Request req, const String & _path, MakeRequest make) {
 						delete [] this->cover;
 					this->cover = img;
 					this->cover_size = cov_size;
+					Path save { PositionSaver::Get().getCacheDir() };
+
 					Path p {this->filepath + ".jpg"};
+					save.Append(p.GetFile());
 					__DP_LIB_NAMESPACE__::Ofstream out;
-					out.open(p.Get(), std::ios::binary);
+					out.open(save.Get(), std::ios::binary);
 					out.write(img, cov_size);
 					out.close();
 				}

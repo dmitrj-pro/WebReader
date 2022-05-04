@@ -9,6 +9,7 @@
 
 using __DP_LIB_NAMESPACE__::List;
 using __DP_LIB_NAMESPACE__::Map;
+using __DP_LIB_NAMESPACE__::UInt;
 using __DP_LIB_NAMESPACE__::SmartPtr;
 
 struct SortedElement{
@@ -38,7 +39,7 @@ class WebReader: public __DP_LIB_NAMESPACE__::ServiceMain {
 		String base_path = "./";
 		String position_file = "positions.txt";
 
-		List<SortedElement> getBooksSortedByLastDate(const String & filter = "");
+		List<SortedElement> getBooksSortedByLastDate(UInt & all_pages, UInt page_num = 0, UInt limit = 20, const String & filter = "");
 		String makeMenu();
 	public:
 		WebReader():__DP_LIB_NAMESPACE__::ServiceMain("WebReader") {}

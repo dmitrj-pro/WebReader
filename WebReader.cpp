@@ -5,7 +5,7 @@
 #include "Finder.h"
 #include <Converter/Converter.h>
 #include "Books/EPub.h"
-#include "Books/PDF.h"
+#include "Books/PDF-Wrapper.h"
 #include "Books/Galery.h"
 #include "UniCode.h"
 #include <_Driver/Path.h>
@@ -17,6 +17,8 @@ using __DP_LIB_NAMESPACE__::Path;
 using __DP_LIB_NAMESPACE__::ConteinsKey;
 using __DP_LIB_NAMESPACE__::OStrStream;
 using __DP_LIB_NAMESPACE__::Vector;
+using __DP_LIB_NAMESPACE__::parse;
+using __DP_LIB_NAMESPACE__::toString;
 
 void WebReader::startWebServer() {
 	List<String> folders;
@@ -38,7 +40,7 @@ void WebReader::startWebServer() {
 				this->books[b->getId()] = b;
 			}
 			if (endWithN(file, ".pdf")) {
-				Book * b = new PDF(p.Get());
+				Book * b = new PDFWrapper(p.Get());
 				this->books[b->getId()] = b;
 			}
 			if (endWithN(file, ".galery")) {
@@ -120,12 +122,28 @@ Request WebReader::routeBook(Request req) {
 		SmartParser parser {"/book/${id}/${page:null<string>}"};
 		SmartParser parser2 {"/book/${id}"};
 		SmartParser parser3 {"/book/${id}/POSITION/"};
+		SmartParser parser4 {"/book/${id}/${type}/POSITION/"};
 		if (parser2.Check(req->path)) {
 			book_id = parser2.Get("id");
 		}
 		if (parser.Check(req->path)) {
 			book_id = parser.Get("id");
 			page = parser.Get("page");
+		}
+
+		if (parser4.Check(req->path)) {
+			if (ConteinsKey(req->get, "pos")) {
+				DP_LOG_TRACE << "Set position for " << book_id << ": " << req->get["pos"];
+				PositionSaver::Get().setPosition(parser4.Get("id"), req->get["pos"]);
+				return makeRequest();
+			}
+			auto pos = PositionSaver::Get().getPosition(parser4.Get("id"));
+			String html = "{ \"position\": \"" + pos.position + "\" }";
+			Request resp = makeRequest();
+			resp->body = new char[html.size() + 1];
+			strncpy(resp->body, html.c_str(), html.size());
+			resp->body_length = html.size();
+			return resp;
 		}
 		if (parser3.Check(req->path)) {
 			if (ConteinsKey(req->get, "pos")) {
@@ -189,7 +207,7 @@ Request WebReader::routeInfoBook(Request req) {
 																 b->getId(),
 																 b->getInformation(),
 																 b->getId()
-															 })}));
+															 }), ""}));
 	Request resp = makeRequest();
 	resp->body = new char[html.size() + 1];
 	strncpy(resp->body, html.c_str(), html.size());
@@ -203,7 +221,14 @@ Request WebReader::mainPage(Request req) {
 	String filter = "";
 	if (ConteinsKey(req->get, "filter"))
 		filter = req->get["filter"];
-	auto sorted = getBooksSortedByLastDate(filter);
+	UInt all_pages;
+	UInt page_num = 0;
+	UInt limit = 20;
+	if (ConteinsKey(req->get, "limit"))
+		limit = parse<UInt>(req->get["limit"]);
+	if (ConteinsKey(req->get, "page"))
+		page_num = parse<UInt>(req->get["page"]);
+	auto sorted = getBooksSortedByLastDate(all_pages, page_num, limit, filter);
 
 	for (auto it : sorted) {
 		vec << findFillText("list/element.txt", List<String>{
@@ -220,9 +245,47 @@ Request WebReader::mainPage(Request req) {
 	#ifdef DP_WIN
 		//encode = "cp1251";
 	#endif*/
+	String pagination = "";
+	{
+		OStrStream pages;
+		if (page_num != 0)
+			pages << findFillText("list/pages_prev.txt", List<String> {
+									 "?limit=" + toString(limit) + "&page=" + toString(page_num-1)  + (filter.size() > 0 ? ("&filter=" + filter) : "")
+								  });
+		for (UInt i = 0 ; i < all_pages; i++)
+			pages << findFillText("list/pages_item.txt", List<String> {
+									 "?limit=" + toString(limit) + "&page=" + toString(i)  + (filter.size() > 0 ? ("&filter=" + filter) : ""),
+									  i == page_num ? findText("list/pages_selected.txt") :  findText("list/pages_unselected.txt"),
+									  toString(i)
+								  });
+		if ((page_num + 1) < all_pages)
+			pages << findFillText("list/pages_next.txt", List<String> {
+									 "?limit=" + toString(limit) + "&page=" + toString(page_num+1) + (filter.size() > 0 ? ("&filter=" + filter) : "")
+								  });
+		OStrStream limiter;
+		List<unsigned short> l { 1, 2, 3, 5, 10, 15, 20, 30, 50, 75, 100};
+		bool lim_exists = false;
+		for (unsigned short lim : l) {
+			if (lim == limit)
+				lim_exists = true;
+			limiter << findFillText("list/pages_limit_item.txt", List<String> {
+										lim == limit ? findText("list/pages_limit_item_selected.txt") : findText("list/pages_limit_item_unselected.txt"),
+										toString(lim)
+									});
+		}
+		if (!lim_exists)
+			limiter << findFillText("limit/pages_limit_item.txt", List<String> {
+										findText("limit/pages_limit_item_selected.txt"),
+										toString(limit)
+									});
+		pagination = findFillText("list/pages.txt", List<String> {
+									  pages.str(),
+									  limiter.str()
+								  });
+	}
 	String html = findFillText("template.txt", List<String>({"Books", makeMenu(), "List", findFillText("list/index.txt", List<String>{
 																 vec.str()
-															 })}));
+															 }), pagination}));
 	Request resp = makeRequest();
 	resp->body = new char[html.size() + 1];
 	strncpy(resp->body, html.c_str(), html.size());

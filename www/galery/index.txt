@@ -25,22 +25,37 @@
 			var slideIndex = {};
 
 			function showSlides(n) {
+				var hash = window.location.hash.substr(1);
 				const images = [
 					{}
 				];
-				if (n < 0)
-					slideIndex =  images.length - 1;
-				if (n >= images.length)
-					slideIndex = 0;
+				if (n <= 0)
+					slideIndex =  images.length;
+				if (n > images.length)
+					slideIndex = 1;
 					
 				let sendUrl = "POSITION/" + "?pos=" + slideIndex.toString();
 				let request = new Request(sendUrl);
 				fetch(request);
+				
+				window.location.hash = slideIndex.toString();
 					
 				var container = document.getElementsByClassName("container");
 				if (container.length > 0)
-					container[0].style.backgroundImage = "url('" + images[slideIndex] + "')";
+					container[0].style.backgroundImage = "url('" + images[slideIndex-1] + "')";
 			}
+			var hash = window.location.hash.substr(1);
+			if (!isNaN(hash) && hash.length > 0) {
+				slideIndex = parseInt(hash);
+			}
+			window.addEventListener('hashchange', function(){
+				var hash = parseInt(window.location.hash.substr(1));
+				if (!isNaN(hash) && hash != slideIndex) {
+					slideIndex = hash;
+					showSlides(slideIndex);
+				}
+				
+			})
 			showSlides(slideIndex);
 		</script>
 	  <a class="prev" onclick="plusSlides(-1)">(</a>

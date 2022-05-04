@@ -1775,6 +1775,8 @@ function webViewerSidebarViewChanged(evt) {
     store.set('sidebarView', evt.view).catch(function () {});
   }
 }
+//*b
+var __DP_LIB_WEB_READER__SENDED_ = false;
 function webViewerUpdateViewarea(evt) {
   var location = evt.location,
       store = PDFViewerApplication.store;
@@ -1795,13 +1797,16 @@ function webViewerUpdateViewarea(evt) {
 	if (location.pageNumber != 1)
 		fetch(request);
 	if (document.getElementById("page1") != null) {
-		html2canvas(document.getElementById("page1")).then(function(canvas) {
-			fetch("SETCOVER", {
-				method: "POST",
-				body: "img=" + canvas.toDataURL("image/jpg")
-			}).then(function(res) {
-			});
-		});	
+		if (! __DP_LIB_WEB_READER__SENDED_)
+			html2canvas(document.getElementById("page1")).then(function(canvas) {
+				fetch("SETCOVER", {
+					method: "POST",
+					body: "img=" + canvas.toDataURL("image/jpg")
+				}).then(function(res) {
+					if (res.status != 404)
+						__DP_LIB_WEB_READER__SENDED_ = true;
+				});
+			});	
 	}
     //*e
   }
